@@ -35,7 +35,7 @@ import requests
 from requests.auth import HTTPBasicAuth
 
 from pyVmomi import vim, vmodl, SoapStubAdapter, SessionOrientedStub
-from pyVmomi.SoapAdapter import CONNECTION_POOL_IDLE_TIMEOUT_SEC
+from pyVmomi.SoapAdapter import CONNECTION_POOL_IDLE_TIMEOUT_SEC, ParserError
 from pyVmomi.VmomiSupport import nsMap, versionIdMap, versionMap, IsChildVersion
 from pyVmomi.VmomiSupport import GetServiceVersions
 
@@ -504,6 +504,8 @@ def __RetrieveContent(host, port, adapter, version, path, keyFile, certFile,
       content = si.RetrieveContent()
    except vmodl.MethodFault:
       raise
+   except ParserError:
+      raise
    except Exception as e:
       # NOTE (hartsock): preserve the traceback for diagnostics
       # pulling and preserving the traceback makes diagnosing connection
@@ -929,4 +931,3 @@ def OpenPathWithStub(path, stub, verify=True):
    if stub.cookie:
       headers["Cookie"] = stub.cookie
    return requests.get(url, headers=headers, verify=verify)
-

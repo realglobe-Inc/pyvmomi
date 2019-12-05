@@ -1376,6 +1376,17 @@ class SoapStubAdapter(SoapStubAdapterBase):
                fd = GzipReader(resp, encoding=GzipReader.DEFLATE)
             deserializer = SoapResponseDeserializer(outerStub)
             obj = deserializer.Deserialize(fd, info.result)
+         except ParserError:
+            req2 = self.SerializeRequest(mo, info, args)
+            for modifier in self.requestModifierList:
+               req2 = modifier(req2)
+            conn2 = self.GetConnection()
+            try:
+               conn2.request('POST', self.path, req2, headers)
+               resp2 = conn2.getresponse()
+            except (socket.error, http_client.HTTPException):
+               self.DropConnections()
+            raise ParserError(resp2.read().decode("utf-8"))
          except Exception as exc:
             self._CloseConnection(conn)
             # NOTE (hartsock): This feels out of place. As a rule the lexical
